@@ -1,3 +1,6 @@
+require('dotenv').config();
+const { PORT = 3000, WEATHER_KEY } = process.env;
+
 const express = require('express');
 const server = express();
 
@@ -43,6 +46,18 @@ server.post('/job-search', async (req, res) => {
   }
 });
 
-server.listen(3000, () => {
+server.get('/weather', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    const URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${ lat }&lon=${ lon }&appid=${ WEATHER_KEY }`;
+
+    const { data } = await axios.get(URL);
+    res.send({ results: data });
+  } catch (error) {
+    res.send({ error });
+  }
+});
+
+server.listen(PORT, () => {
   console.log('I am listening...');
 });
