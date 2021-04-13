@@ -1,21 +1,5 @@
-console.log("Hello!");
-
 const express = require('express');
 const server = express();
-
-server.use(express.static('public'));
-
-server.get('/hello', (req, res) => {
-  res.send(`
-  <html>
-  <head></head>
-  <body>
-    <h3>Hello!</h3>
-  </body>
-  </html>
-  `)
-});
-
 
 const morgan = require('morgan');
 server.use(morgan('dev'));
@@ -26,13 +10,39 @@ const bodyParser = require('body-parser');
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: false }));
 
-server.post('/job-search', (req, res) => {
-  res.send({
-    searchData: req.body,
-    status: "PENDING",
-  })
+const cowsay = require('cowsay');
+const Quote = require('inspirational-quotes')
+
+server.get('/cowspiration', (req, res) => {
+  const { text, author } = Quote.getQuote();
+
+  const cow = cowsay.say({
+    text: `${ text }\n\n- ${ author }`,
+    W: 80,
+  });
+
+  res.send({ cow });
 });
 
-server.listen(2000, () => {
+const axios = require('axios');
+
+server.post('/job-search', async (req, res) => {
+  try {
+    const { description, fulltime } = req.body;
+
+    const URL = `https://jobs.github.com/positions.json?${
+      description ? `description=${ description }&` : ''
+    }${
+      fulltime ? 'fulltime=on' : ''
+    }`;
+
+    const { data } = await axios.get(URL);
+    res.send({ results: data });
+  } catch (error) {
+    res.send({ error })
+  }
+});
+
+server.listen(3000, () => {
   console.log('I am listening...');
 });
